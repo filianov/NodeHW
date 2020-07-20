@@ -1,10 +1,14 @@
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
+require('dotenv').config();
+
 const contactsFunctions = require('./contacts');
 
 const yargs = require('yargs');
 
-// contactsFunctions.removeContact(5);
-
-// contactsFunctions.addContact("mango", "we@gmail.com", "123")
+const app = express();
+const PORT = process.env.PORT;
 
 const argv = yargs
     .number('id')
@@ -39,4 +43,27 @@ function invokeAction({ action, id, name, email, phone }) {
 }
 
 invokeAction(argv);
+
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: "http://localhost:3068" }));
+app.use((err, req, res, next) => {
+    const { message, status } = err;
+
+    res.status(status || 500).send(message);
+});
+
+app.get('/api/contacts', contactsFunctions.listContacts);
+
+app.get('/api/contacts/:contactId', contactsFunctions.getContactById);
+
+app.post('/api/contacts', contactsFunctions.validateCreateContact, contactsFunctions.addContact);
+
+app.delete('/api/contacts/:contactId', contactsFunctions.removeContact);
+
+app.patch('/api/contacts/:contactId', contactsFunctions.validateUpdateContact, contactsFunctions.updateContact)
+
+app.listen(PORT, () => { console.log('Lissening on port', PORT); });
+
 
