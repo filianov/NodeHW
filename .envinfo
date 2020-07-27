@@ -1,1 +1,2 @@
 PORT=3068
+MONGO_URL=mongodb://pavloAdmin:<password>@cluster0-shard-00-00.iq5zg.mongodb.net:27017,cluster0-shard-00-01.iq5zg.mongodb.net:27017,cluster0-shard-00-02.iq5zg.mongodb.net:27017/<dbname>?ssl=true&replicaSet=atlas-obqw9h-shard-0&authSource=admin&retryWrites=true&w=majority
