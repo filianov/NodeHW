@@ -4,6 +4,8 @@ const cors = require('cors');
 require('dotenv').config();
 const mongoose = require('mongoose');
 
+const usersRouter = require('./users/users.router');
+
 const contactsRouter = require('./contacts/contacts.router');
 
 // const yargs = require('yargs');
@@ -16,7 +18,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: "http://localhost:3068" }));
 
-app.use('/api/contacts', contactsRouter)
+app.use('/auth', usersRouter);
+
+app.use('/api/contacts', contactsRouter);
 
 app.use((err, req, res, next) => {
     const { message, status } = err;

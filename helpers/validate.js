@@ -36,7 +36,43 @@ async function validateUpdateContact(req, res, next) {
     catch (err) { console.log('err', err) };
 };
 
+async function validateCreateUser(req, res, next) {
+    try {
+        const userSchema = Joi.object({
+
+            email: Joi.string().required(),
+            subscription: Joi.string(),
+            password: Joi.string().required(),
+            token: Joi.string()
+        })
+        const result = userSchema.validate(req.body);
+        if (result.error) {
+            res.status(400).send(result.error)
+        }
+        next()
+    }
+    catch (err) { console.log('err', err) };
+};
+
+async function validateLoginUser(req, res, next) {
+    try {
+        const userSchema = Joi.object({
+
+            email: Joi.string().required(),
+            password: Joi.string().required()
+        })
+        const result = userSchema.validate(req.body);
+        if (result.error) {
+            res.status(400).send(result.error)
+        }
+        next()
+    }
+    catch (err) { console.log('err', err) };
+};
+
 module.exports = {
     validateCreateContact,
-    validateUpdateContact
+    validateUpdateContact,
+    validateCreateUser,
+    validateLoginUser,
 };
