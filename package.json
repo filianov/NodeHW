@@ -12,13 +12,18 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/joi": "^17.1.1",
+    "avatar-builder": "^1.0.1",
+    "avatar-generator": "^2.0.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "fs-extra": "^9.0.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.25",
     "morgan": "^1.10.0",
+    "move-file": "^2.0.0",
+    "multer": "^1.4.2",
     "shortid": "^2.2.15",
     "yargs": "^15.4.0"
   },

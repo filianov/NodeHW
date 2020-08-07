@@ -1,6 +1,32 @@
 const bcryptjs = require('bcryptjs');
 const User = require('./users.model');
 const jwt = require("jsonwebtoken");
+const Avatar = require('avatar-builder');
+const fs = require('fs');
+const fse = require('fs-extra');
+const path = require('path');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: './public/images',
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '_' + file.originalname);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null, true);
+    } else {
+        cb('Type file is not accepted', false);
+    }
+};
+
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: 5
+});
 
 const getUsers = async (req, res, next) => {
     try {
@@ -9,9 +35,11 @@ const getUsers = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+// const avatar = Avatar.builder(Avatar.Image.margin(Avatar.Image.circleMask(Avatar.Image.identicon())), 128, 128);
+
 const createUser = async (req, res) => {
     try {
-        const { password, email, subscription } = req.body;
+        const { password, email, subscription, avatarURL } = req.body;
 
         const candidate = await User.findOne({ email });
 
@@ -21,7 +49,20 @@ const createUser = async (req, res) => {
 
         const hashPassword = await bcryptjs.hash(password, 10);
 
-        const newUser = new User({ email, subscription: subscription, password: hashPassword });
+        const url = path.join('http://localhost:3068/static/images/', `${email}.png`);
+
+        console.log('url', url)
+
+        const avatar = Avatar.builder(Avatar.Image.margin(Avatar.Image.circleMask(Avatar.Image.identicon())), 128, 128);
+
+        await avatar.create('gabriel').then(buffer => fs.writeFileSync(`./tmp/${email}.png`, buffer));
+
+        fse.move(`./tmp/${email}.png`, `./public/images/${email}.png`, function (err) {
+            if (err) return console.error(err)
+            console.log("success!")
+        });
+
+        const newUser = new User({ email, subscription: subscription, password: hashPassword, avatarURL: url });
 
         const userInDb = await newUser.save();
 
@@ -29,6 +70,7 @@ const createUser = async (req, res) => {
             {
                 id: userInDb._id,
                 subscription,
+                avatarURL,
                 email,
             });
     }
@@ -78,6 +120,22 @@ const getCurrentUser = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+const addAvatarToCurrentUser = async (req, res, next) => {
+    try {
+        const { token } = req.user;
+        const avatar = req.file.path;
+        console.log('token', token)
+        console.log('req.file', req.file)
+
+        const user = await User.findOneAndUpdate({ token: token }, { $set: { avatarURL: `http://localhost:3068/${avatar}` } }, { new: true });
+        console.log('user', user)
+        if (user.token !== token) {
+            res.status(400).send(`token not match`)
+        } res.status(200).send(user.avatarURL);
+    } catch (err) { next(err); }
+};
+
+
 const logOut = async (req, res, next) => {
     try {
         const id = req.user._id;
@@ -92,5 +150,7 @@ module.exports = {
     loginUser,
     getCurrentUser,
     logOut,
-    getUsers
+    getUsers,
+    addAvatarToCurrentUser,
+    upload,
 };
