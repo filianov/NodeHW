@@ -1,11 +1,13 @@
 const bcryptjs = require('bcryptjs');
 const User = require('./users.model');
+const { verificationEmail } = require('./emailing.client');
 const jwt = require("jsonwebtoken");
 const Avatar = require('avatar-builder');
 const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 const multer = require('multer');
+const uuid = require("uuid");
 
 const storage = multer.diskStorage({
     destination: './public/images',
@@ -35,11 +37,16 @@ const getUsers = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-// const avatar = Avatar.builder(Avatar.Image.margin(Avatar.Image.circleMask(Avatar.Image.identicon())), 128, 128);
+async function sendVerificationEmail(user) {
+    const { email, verificationToken } = user;
+
+    const verificationLink = `http://localhost:3068/auth/verify/${verificationToken}`;
+    await verificationEmail(email, verificationLink);
+};
 
 const createUser = async (req, res) => {
     try {
-        const { password, email, subscription, avatarURL } = req.body;
+        const { password, email, subscription, avatarURL, verificationToken, } = req.body;
 
         const candidate = await User.findOne({ email });
 
@@ -62,9 +69,11 @@ const createUser = async (req, res) => {
             console.log("success!")
         });
 
-        const newUser = new User({ email, subscription: subscription, password: hashPassword, avatarURL: url });
+        const newUser = new User({ email, subscription: subscription, password: hashPassword, avatarURL: url, verificationToken: uuid.v4(), });
 
         const userInDb = await newUser.save();
+
+        await sendVerificationEmail(newUser);
 
         res.status(201).send(
             {
@@ -72,6 +81,7 @@ const createUser = async (req, res) => {
                 subscription,
                 avatarURL,
                 email,
+                verificationToken
             });
     }
     catch (err) {
@@ -135,6 +145,23 @@ const addAvatarToCurrentUser = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+const verifyUser = async (req, res, next) => {
+    try {
+        const { verificationToken } = req.params;
+
+        const user = await User.findOneAndUpdate(
+            { verificationToken },
+            {
+                verificationToken: null,
+            }
+        );
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+        return res.status(200).send("You are verified");
+    } catch (err) { next(err); };
+};
+
 
 const logOut = async (req, res, next) => {
     try {
@@ -153,4 +180,5 @@ module.exports = {
     getUsers,
     addAvatarToCurrentUser,
     upload,
+    verifyUser,
 };
