@@ -8,6 +8,7 @@ const fse = require('fs-extra');
 const path = require('path');
 const multer = require('multer');
 const uuid = require("uuid");
+require('dotenv').config()
 
 const storage = multer.diskStorage({
     destination: './public/images',
@@ -40,7 +41,7 @@ const getUsers = async (req, res, next) => {
 async function sendVerificationEmail(user) {
     const { email, verificationToken } = user;
 
-    const verificationLink = `http://localhost:3068/auth/verify/${verificationToken}`;
+    const verificationLink = `${process.env.BASE_URL}/auth/verify/${verificationToken}`;
     await verificationEmail(email, verificationLink);
 };
 
