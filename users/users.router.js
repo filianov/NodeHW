@@ -1,7 +1,7 @@
 const { Router } = require('express');
 
 const { createUser, loginUser, getUsers, getCurrentUser,
-    logOut, addAvatarToCurrentUser, upload } = require('./users.controller');
+    logOut, addAvatarToCurrentUser, upload, verifyUser } = require('./users.controller');
 
 const { validateCreateUser, validateLoginUser } = require('../helpers/validate');
 
@@ -20,5 +20,8 @@ usersRouter.get('/users/current', authorize, getCurrentUser);
 usersRouter.post('/logout', authorize, logOut);
 
 usersRouter.patch('/users/avatars', authorize, upload.single('avatar'), addAvatarToCurrentUser);
+
+usersRouter.get('/verify/:verificationToken', verifyUser);
+
 
 module.exports = usersRouter;

@@ -29,7 +29,8 @@ const userShema = new Schema({
         type: String,
         trim: true,
         default: "",
-    }
+    },
+    verificationToken: { type: String, required: false },
 });
 
 const userModel = mongoose.model('Auth', userShema);
